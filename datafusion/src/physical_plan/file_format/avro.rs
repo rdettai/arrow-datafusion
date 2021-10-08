@@ -16,8 +16,8 @@
 // under the License.
 
 //! Execution plan for reading line-delimited Avro files
-use crate::datasource::file_format::PartitionedFile;
 use crate::datasource::object_store::ObjectStore;
+use crate::datasource::PartitionedFile;
 use crate::error::{DataFusionError, Result};
 #[cfg(feature = "avro")]
 use crate::physical_plan::RecordBatchStream;
@@ -156,14 +156,14 @@ impl ExecutionPlan for AvroExec {
             DisplayFormatType::Default => {
                 write!(
                     f,
-                    "AvroExec: batch_size={}, limit={:?}, files=[{}]",
-                    self.batch_size,
-                    self.limit,
+                    "AvroExec: files=[{}], batch_size={}, limit={:?}",
                     self.files
                         .iter()
                         .map(|f| f.file_meta.path())
                         .collect::<Vec<_>>()
-                        .join(", ")
+                        .join(", "),
+                    self.batch_size,
+                    self.limit,
                 )
             }
         }

@@ -59,7 +59,7 @@ use tokio::{
 
 use async_trait::async_trait;
 
-use crate::datasource::file_format::{FilePartition, PartitionedFile};
+use crate::datasource::{FilePartition, PartitionedFile};
 
 /// Execution plan for scanning one or more Parquet partitions
 #[derive(Debug, Clone)]

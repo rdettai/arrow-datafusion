@@ -91,7 +91,7 @@ impl FileFormat for JsonFormat {
         let exec = NdJsonExec::new(
             conf.object_store,
             // flattening this for now because NdJsonExec does not support partitioning yet
-            conf.files.into_iter().flatten().collect(),
+            conf.files.into_iter().flatten().collect::<Vec<_>>(),
             conf.statistics,
             conf.schema,
             conf.projection,
@@ -109,11 +109,12 @@ mod tests {
     use super::*;
     use crate::{
         datasource::{
-            file_format::{PartitionedFile, PhysicalPlanConfig},
+            file_format::PhysicalPlanConfig,
             object_store::local::{
                 local_file_meta, local_object_reader, local_object_reader_stream,
                 LocalFileSystem,
             },
+            PartitionedFile,
         },
         physical_plan::collect,
     };

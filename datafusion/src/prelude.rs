@@ -27,6 +27,7 @@
 
 pub use crate::dataframe::DataFrame;
 pub use crate::execution::context::{ExecutionConfig, ExecutionContext};
+pub use crate::execution::options::{AvroReadOptions, CsvReadOptions, NdJsonReadOptions};
 pub use crate::logical_plan::{
     array, ascii, avg, bit_length, btrim, character_length, chr, col, concat, concat_ws,
     count, create_udf, date_part, date_trunc, in_list, initcap, left, length, lit, lower,
@@ -35,4 +36,3 @@ pub use crate::logical_plan::{
     starts_with, strpos, substr, sum, to_hex, translate, trim, upper, Column, JoinType,
     Partitioning,
 };
-pub use crate::physical_plan::csv::CsvReadOptions;

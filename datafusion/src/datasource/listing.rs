@@ -25,7 +25,7 @@ use async_trait::async_trait;
 use futures::StreamExt;
 
 use crate::{
-    datasource::file_format::{self, PartitionedFile},
+    datasource::PartitionedFile,
     error::{DataFusionError, Result},
     logical_plan::Expr,
     physical_plan::{ExecutionPlan, Statistics},
@@ -33,9 +33,10 @@ use crate::{
 
 use super::{
     datasource::TableProviderFilterPushDown,
-    file_format::{FileFormat, PartitionedFileStream, PhysicalPlanConfig},
+    file_format::{FileFormat, PhysicalPlanConfig},
+    get_statistics_with_limit,
     object_store::ObjectStore,
-    TableProvider,
+    PartitionedFileStream, TableProvider,
 };
 
 /// Options for creating a `ListingTable`
@@ -59,10 +60,26 @@ pub struct ListingOptions {
     pub collect_stat: bool,
     /// Group files to avoid that the number of partitions
     /// exceeds this limit
-    pub max_partitions: usize,
+    pub target_partitions: usize,
 }
 
 impl ListingOptions {
+    /// Creates an options instance with the given format
+    /// Default values:
+    /// - no file extension filter
+    /// - no input partition to discover
+    /// - one target partition
+    /// - no stat collection
+    pub fn new(format: Arc<dyn FileFormat>) -> Self {
+        Self {
+            file_extension: String::new(),
+            format,
+            partitions: vec![],
+            collect_stat: false,
+            target_partitions: 1,
+        }
+    }
+
     /// Infer the schema of the files at the given uri, including the partitioning
     /// columns.
     ///
@@ -200,7 +217,7 @@ impl ListingTable {
         });
 
         let (files, statistics) =
-            file_format::get_statistics_with_limit(files, self.schema(), limit).await?;
+            get_statistics_with_limit(files, self.schema(), limit).await?;
 
         if files.is_empty() {
             return Err(DataFusionError::Plan(format!(
@@ -209,7 +226,10 @@ impl ListingTable {
             )));
         }
 
-        Ok((split_files(files, self.options.max_partitions), statistics))
+        Ok((
+            split_files(files, self.options.target_partitions),
+            statistics,
+        ))
     }
 }
 
@@ -344,7 +364,7 @@ mod tests {
             file_extension: "parquet".to_owned(),
             format: Arc::new(ParquetFormat::default()),
             partitions: vec![],
-            max_partitions: 2,
+            target_partitions: 2,
             collect_stat: true,
         };
         // here we resolve the schema locally
@@ -359,7 +379,7 @@ mod tests {
 
     async fn assert_partitioning(
         files_in_folder: usize,
-        max_partitions: usize,
+        target_partitions: usize,
         output_partitioning: usize,
     ) -> Result<()> {
         let mock_store: Arc<dyn ObjectStore> =
@@ -371,7 +391,7 @@ mod tests {
             file_extension: "".to_owned(),
             format: Arc::new(format),
             partitions: vec![],
-            max_partitions,
+            target_partitions,
             collect_stat: true,
         };
 

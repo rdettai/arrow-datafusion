@@ -111,7 +111,7 @@ impl FileFormat for CsvFormat {
         let exec = CsvExec::new(
             conf.object_store,
             // flattening this for now because CsvExec does not support partitioning yet
-            conf.files.into_iter().flatten().collect(),
+            conf.files.into_iter().flatten().collect::<Vec<_>>(),
             conf.statistics,
             conf.schema,
             self.has_header,
@@ -131,11 +131,12 @@ mod tests {
     use super::*;
     use crate::{
         datasource::{
-            file_format::{PartitionedFile, PhysicalPlanConfig},
+            file_format::PhysicalPlanConfig,
             object_store::local::{
                 local_file_meta, local_object_reader, local_object_reader_stream,
                 LocalFileSystem,
             },
+            PartitionedFile,
         },
         physical_plan::collect,
     };

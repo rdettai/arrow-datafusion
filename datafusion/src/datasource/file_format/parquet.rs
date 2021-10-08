@@ -47,6 +47,9 @@ use crate::physical_plan::ExecutionPlan;
 use crate::physical_plan::{Accumulator, Statistics};
 use crate::scalar::ScalarValue;
 
+/// The default file exetension of parquet files
+pub const DEFAULT_PARQUET_EXTENSION: &str = ".parquet";
+
 /// The Apache Parquet `FileFormat` implementation
 pub struct ParquetFormat {
     enable_pruning: bool,
@@ -318,11 +321,11 @@ impl ChunkReader for ChunkObjectReader {
 mod tests {
     use crate::{
         datasource::{
-            file_format::PartitionedFile,
             object_store::local::{
                 local_file_meta, local_object_reader, local_object_reader_stream,
                 LocalFileSystem,
             },
+            PartitionedFile,
         },
         physical_plan::collect,
     };
