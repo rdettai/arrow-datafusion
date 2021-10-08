@@ -306,10 +306,10 @@ impl ExecutionContext {
 
     /// Creates a DataFrame for reading an Avro data source.
 
-    pub async fn read_avro<'a>(
+    pub async fn read_avro(
         &mut self,
         uri: impl Into<String>,
-        options: AvroReadOptions<'a>,
+        options: AvroReadOptions<'_>,
     ) -> Result<Arc<dyn DataFrame>> {
         let uri: String = uri.into();
         let (object_store, path) = self.object_store(&uri)?;
@@ -328,10 +328,10 @@ impl ExecutionContext {
     }
 
     /// Creates a DataFrame for reading a CSV data source.
-    pub async fn read_csv<'a>(
+    pub async fn read_csv(
         &mut self,
         uri: impl Into<String>,
-        options: CsvReadOptions<'a>,
+        options: CsvReadOptions<'_>,
     ) -> Result<Arc<dyn DataFrame>> {
         let uri: String = uri.into();
         let (object_store, path) = self.object_store(&uri)?;
@@ -408,11 +408,11 @@ impl ExecutionContext {
 
     /// Registers a CSV data source so that it can be referenced from SQL statements
     /// executed against this context.
-    pub async fn register_csv<'a>(
+    pub async fn register_csv(
         &mut self,
         name: &str,
         uri: &str,
-        options: CsvReadOptions<'a>,
+        options: CsvReadOptions<'_>,
     ) -> Result<()> {
         let listing_options = options
             .to_listing_options(self.state.lock().unwrap().config.target_partitions);
@@ -441,7 +441,7 @@ impl ExecutionContext {
             format: Arc::new(file_format),
             collect_stat: true,
             file_extension: DEFAULT_PARQUET_EXTENSION.to_owned(),
-            target_partitions: target_partitions,
+            target_partitions,
             partitions: vec![],
         };
 
@@ -452,11 +452,11 @@ impl ExecutionContext {
 
     /// Registers an Avro data source so that it can be referenced from SQL statements
     /// executed against this context.
-    pub async fn register_avro<'a>(
+    pub async fn register_avro(
         &mut self,
         name: &str,
         uri: &str,
-        options: AvroReadOptions<'a>,
+        options: AvroReadOptions<'_>,
     ) -> Result<()> {
         let listing_options = options
             .to_listing_options(self.state.lock().unwrap().config.target_partitions);

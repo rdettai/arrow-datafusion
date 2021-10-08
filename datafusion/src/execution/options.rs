@@ -107,7 +107,7 @@ impl<'a> CsvReadOptions<'a> {
             format: Arc::new(file_format),
             collect_stat: false,
             file_extension: self.file_extension.to_owned(),
-            target_partitions: target_partitions,
+            target_partitions,
             partitions: vec![],
         }
     }
@@ -142,7 +142,7 @@ impl<'a> AvroReadOptions<'a> {
             format: Arc::new(file_format),
             collect_stat: false,
             file_extension: self.file_extension.to_owned(),
-            target_partitions: target_partitions,
+            target_partitions,
             partitions: vec![],
         }
     }

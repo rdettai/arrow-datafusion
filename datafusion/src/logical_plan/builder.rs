@@ -122,10 +122,10 @@ impl LogicalPlanBuilder {
     }
 
     /// Scan a CSV data source
-    pub async fn scan_csv<'a>(
+    pub async fn scan_csv(
         object_store: Arc<dyn ObjectStore>,
         path: impl Into<String>,
-        options: CsvReadOptions<'a>,
+        options: CsvReadOptions<'_>,
         projection: Option<Vec<usize>>,
         target_partitions: usize,
     ) -> Result<Self> {
@@ -142,10 +142,10 @@ impl LogicalPlanBuilder {
     }
 
     /// Scan a CSV data source and register it with a given table name
-    pub async fn scan_csv_with_name<'a>(
+    pub async fn scan_csv_with_name(
         object_store: Arc<dyn ObjectStore>,
         path: impl Into<String>,
-        options: CsvReadOptions<'a>,
+        options: CsvReadOptions<'_>,
         projection: Option<Vec<usize>>,
         table_name: impl Into<String>,
         target_partitions: usize,
@@ -155,12 +155,12 @@ impl LogicalPlanBuilder {
         let path: String = path.into();
 
         let resolved_schema = match options.schema {
+            Some(s) => Arc::new(s.to_owned()),
             None => {
                 listing_options
                     .infer_schema(Arc::clone(&object_store), &path)
                     .await?
             }
-            Some(s) => Arc::new(s.to_owned()),
         };
         let provider =
             ListingTable::new(object_store, path, resolved_schema, listing_options);
@@ -218,10 +218,10 @@ impl LogicalPlanBuilder {
     }
 
     /// Scan an Avro data source
-    pub async fn scan_avro<'a>(
+    pub async fn scan_avro(
         object_store: Arc<dyn ObjectStore>,
         path: impl Into<String>,
-        options: AvroReadOptions<'a>,
+        options: AvroReadOptions<'_>,
         projection: Option<Vec<usize>>,
         target_partitions: usize,
     ) -> Result<Self> {
@@ -238,10 +238,10 @@ impl LogicalPlanBuilder {
     }
 
     /// Scan an Avro data source and register it with a given table name
-    pub async fn scan_avro_with_name<'a>(
+    pub async fn scan_avro_with_name(
         object_store: Arc<dyn ObjectStore>,
         path: impl Into<String>,
-        options: AvroReadOptions<'a>,
+        options: AvroReadOptions<'_>,
         projection: Option<Vec<usize>>,
         table_name: impl Into<String>,
         target_partitions: usize,
@@ -251,12 +251,12 @@ impl LogicalPlanBuilder {
         let path: String = path.into();
 
         let resolved_schema = match options.schema {
+            Some(s) => s,
             None => {
                 listing_options
                     .infer_schema(Arc::clone(&object_store), &path)
                     .await?
             }
-            Some(s) => s,
         };
         let provider =
             ListingTable::new(object_store, path, resolved_schema, listing_options);
