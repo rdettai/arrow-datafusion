@@ -22,6 +22,8 @@ pub mod csv;
 pub mod json;
 pub mod parquet;
 
+use std::any::Any;
+use std::fmt;
 use std::sync::Arc;
 
 use crate::arrow::datatypes::SchemaRef;
@@ -60,7 +62,11 @@ pub struct PhysicalPlanConfig {
 /// from the `TableProvider`. This helps code re-utilization accross
 /// providers that support the the same file formats.
 #[async_trait]
-pub trait FileFormat: Send + Sync {
+pub trait FileFormat: Send + Sync + fmt::Debug {
+    /// Returns the table provider as [`Any`](std::any::Any) so that it can be
+    /// downcast to a specific implementation.
+    fn as_any(&self) -> &dyn Any;
+
     /// Infer the common schema of the provided objects. The objects will usually
     /// be analysed up to a given number of records or files (as specified in the
     /// format config) then give the estimated common schema. This might fail if

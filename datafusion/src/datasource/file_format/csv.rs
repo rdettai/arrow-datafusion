@@ -17,6 +17,7 @@
 
 //! CSV format abstractions
 
+use std::any::Any;
 use std::sync::Arc;
 
 use arrow::datatypes::Schema;
@@ -32,6 +33,7 @@ use crate::physical_plan::ExecutionPlan;
 use crate::physical_plan::Statistics;
 
 /// Character Separated Value `FileFormat` implementation.
+#[derive(Debug)]
 pub struct CsvFormat {
     has_header: bool,
     delimiter: u8,
@@ -63,16 +65,30 @@ impl CsvFormat {
         self
     }
 
+    /// True if the first line is a header.
+    pub fn has_header(&self) -> bool {
+        self.has_header
+    }
+
     /// The character separating values within a row.
     /// - default to ','
     pub fn with_delimiter(mut self, delimiter: u8) -> Self {
         self.delimiter = delimiter;
         self
     }
+
+    /// The delimiter character.
+    pub fn delimiter(&self) -> u8 {
+        self.delimiter
+    }
 }
 
 #[async_trait]
 impl FileFormat for CsvFormat {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     async fn infer_schema(&self, mut readers: ObjectReaderStream) -> Result<SchemaRef> {
         let mut schemas = vec![];
 

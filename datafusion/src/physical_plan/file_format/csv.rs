@@ -41,23 +41,16 @@ use async_trait::async_trait;
 #[derive(Debug, Clone)]
 pub struct CsvExec {
     object_store: Arc<dyn ObjectStore>,
-    /// List of data files
     files: Vec<PartitionedFile>,
     /// Schema representing the CSV file
     schema: SchemaRef,
-    /// Provided statistics
-    statistics: Statistics,
-    /// Does the CSV file have a header?
-    has_header: bool,
-    /// An optional column delimiter. Defaults to `b','`
-    delimiter: Option<u8>,
-    /// Optional projection for which columns to load
-    projection: Option<Vec<usize>>,
     /// Schema after the projection has been applied
     projected_schema: SchemaRef,
-    /// Batch size
+    statistics: Statistics,
+    has_header: bool,
+    delimiter: u8,
+    projection: Option<Vec<usize>>,
     batch_size: usize,
-    /// Limit in nr. of rows
     limit: Option<usize>,
 }
 
@@ -89,12 +82,41 @@ impl CsvExec {
             schema,
             statistics,
             has_header,
-            delimiter: Some(delimiter),
+            delimiter,
             projection,
             projected_schema,
             batch_size,
             limit,
         }
+    }
+
+    /// List of data files
+    pub fn files(&self) -> &[PartitionedFile] {
+        &self.files
+    }
+    /// The schema before projection
+    pub fn file_schema(&self) -> &SchemaRef {
+        &self.schema
+    }
+    /// true if the first line of each file is a header
+    pub fn has_header(&self) -> bool {
+        self.has_header
+    }
+    /// A column delimiter
+    pub fn delimiter(&self) -> u8 {
+        self.delimiter
+    }
+    /// Optional projection for which columns to load
+    pub fn projection(&self) -> &Option<Vec<usize>> {
+        &self.projection
+    }
+    /// Batch size
+    pub fn batch_size(&self) -> usize {
+        self.batch_size
+    }
+    /// Limit in nr. of rows
+    pub fn limit(&self) -> Option<usize> {
+        self.limit
     }
 }
 
@@ -191,7 +213,7 @@ impl<R: Read> CsvStream<R> {
         reader: R,
         schema: SchemaRef,
         has_header: bool,
-        delimiter: Option<u8>,
+        delimiter: u8,
         projection: &Option<Vec<usize>>,
         batch_size: usize,
         limit: Option<usize>,
@@ -203,7 +225,7 @@ impl<R: Read> CsvStream<R> {
             reader,
             schema,
             has_header,
-            delimiter,
+            Some(delimiter),
             batch_size,
             bounds,
             projection.clone(),

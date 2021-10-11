@@ -82,6 +82,26 @@ impl AvroExec {
             limit,
         }
     }
+    /// List of data files
+    pub fn files(&self) -> &[PartitionedFile] {
+        &self.files
+    }
+    /// The schema before projection
+    pub fn file_schema(&self) -> &SchemaRef {
+        &self.schema
+    }
+    /// Optional projection for which columns to load
+    pub fn projection(&self) -> &Option<Vec<usize>> {
+        &self.projection
+    }
+    /// Batch size
+    pub fn batch_size(&self) -> usize {
+        self.batch_size
+    }
+    /// Limit in nr. of rows
+    pub fn limit(&self) -> Option<usize> {
+        self.limit
+    }
 }
 
 #[async_trait]

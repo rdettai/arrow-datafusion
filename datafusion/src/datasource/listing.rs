@@ -130,6 +130,19 @@ impl ListingTable {
             options,
         }
     }
+
+    /// Get object store ref
+    pub fn object_store(&self) -> &Arc<dyn ObjectStore> {
+        &self.object_store
+    }
+    /// Get path ref
+    pub fn path(&self) -> &str {
+        &self.path
+    }
+    /// Get options ref
+    pub fn options(&self) -> &ListingOptions {
+        &self.options
+    }
 }
 
 #[async_trait]

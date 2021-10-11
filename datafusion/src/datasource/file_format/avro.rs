@@ -17,6 +17,7 @@
 
 //! Apache Avro format abstractions
 
+use std::any::Any;
 use std::sync::Arc;
 
 use arrow::datatypes::Schema;
@@ -33,11 +34,15 @@ use crate::physical_plan::ExecutionPlan;
 use crate::physical_plan::Statistics;
 
 /// Avro `FileFormat` implementation.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct AvroFormat;
 
 #[async_trait]
 impl FileFormat for AvroFormat {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     async fn infer_schema(&self, mut readers: ObjectReaderStream) -> Result<SchemaRef> {
         let mut schemas = vec![];
         while let Some(obj_reader) = readers.next().await {

@@ -281,6 +281,16 @@ impl LogicalPlanBuilder {
         provider: Arc<dyn TableProvider>,
         projection: Option<Vec<usize>>,
     ) -> Result<Self> {
+        Self::scan_with_filters(table_name, provider, projection, vec![])
+    }
+
+    /// Convert a table provider into a builder with a TableScan
+    pub fn scan_with_filters(
+        table_name: impl Into<String>,
+        provider: Arc<dyn TableProvider>,
+        projection: Option<Vec<usize>>,
+        filters: Vec<Expr>,
+    ) -> Result<Self> {
         let table_name = table_name.into();
 
         if table_name.is_empty() {
@@ -311,7 +321,7 @@ impl LogicalPlanBuilder {
             source: provider,
             projected_schema: Arc::new(projected_schema),
             projection,
-            filters: vec![],
+            filters,
             limit: None,
         };
 

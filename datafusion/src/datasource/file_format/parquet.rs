@@ -17,6 +17,7 @@
 
 //! Parquet format abstractions
 
+use std::any::Any;
 use std::io::Read;
 use std::sync::Arc;
 
@@ -51,6 +52,7 @@ use crate::scalar::ScalarValue;
 pub const DEFAULT_PARQUET_EXTENSION: &str = ".parquet";
 
 /// The Apache Parquet `FileFormat` implementation
+#[derive(Debug)]
 pub struct ParquetFormat {
     enable_pruning: bool,
 }
@@ -70,10 +72,18 @@ impl ParquetFormat {
         self.enable_pruning = enable;
         self
     }
+    /// Return true if pruning is enabled
+    pub fn enable_pruning(&self) -> bool {
+        self.enable_pruning
+    }
 }
 
 #[async_trait]
 impl FileFormat for ParquetFormat {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+
     async fn infer_schema(&self, mut readers: ObjectReaderStream) -> Result<SchemaRef> {
         // We currently get the schema information from the first file rather than do
         // schema merging and this is a limitation.

@@ -202,6 +202,27 @@ impl ParquetExec {
 
         (Arc::new(projected_schema), statistics)
     }
+
+    /// List of data files
+    pub fn partitions(&self) -> Vec<&[PartitionedFile]> {
+        self.partitions
+            .iter()
+            .map(|fp| fp.file_partition.files.as_slice())
+            .collect()
+    }
+    /// Optional projection for which columns to load
+    pub fn projection(&self) -> &[usize] {
+        &self.projection
+    }
+    /// Batch size
+    pub fn batch_size(&self) -> usize {
+        self.batch_size
+    }
+
+    /// Limit in nr. of rows
+    pub fn limit(&self) -> Option<usize> {
+        self.limit
+    }
 }
 
 impl ParquetPartition {
