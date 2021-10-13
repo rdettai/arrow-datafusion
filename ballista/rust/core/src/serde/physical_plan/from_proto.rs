@@ -37,7 +37,7 @@ use datafusion::catalog::catalog::{
 };
 use datafusion::datasource::object_store::local::LocalFileSystem;
 use datafusion::datasource::object_store::{FileMeta, ObjectStoreRegistry, SizedFile};
-use datafusion::datasource::{FilePartition, PartitionedFile};
+use datafusion::datasource::PartitionedFile;
 use datafusion::execution::context::{
     ExecutionConfig, ExecutionContextState, ExecutionProps,
 };
@@ -145,7 +145,7 @@ impl TryInto<Arc<dyn ExecutionPlan>> for &protobuf::PhysicalPlanNode {
 
                 Ok(Arc::new(ParquetExec::new(
                     Arc::new(LocalFileSystem {}),
-                    scan.partitions
+                    scan.file_groups
                         .iter()
                         .map(|p| {
                             let it = p.files.iter().map(|f| f.try_into());
