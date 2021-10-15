@@ -171,3 +171,106 @@ where
         Arc::clone(&self.schema)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use futures::StreamExt;
+
+    use super::*;
+    use crate::{
+        error::Result,
+        test::{make_partition, object_store::TestObjectStore},
+    };
+
+    /// helper that creates a stream of 2 files with the same pair of batches in each ([0,1,2] and [0,1])
+    async fn create_and_collect(limit: Option<usize>) -> Vec<RecordBatch> {
+        let records = vec![make_partition(3), make_partition(2)];
+
+        let source_schema = records[0].schema();
+
+        let reader = move |_file, _remain: &Option<usize>| {
+            // this reder returns the same batch regardless of the file
+            Box::new(records.clone().into_iter().map(|rec| Ok(rec))) as BatchIter
+        };
+
+        let file_stream = FileStream::new(
+            TestObjectStore::new_arc(&[("mock_file1", 10), ("mock_file2", 20)]),
+            vec![
+                PartitionedFile::new("mock_file1".to_owned(), 10),
+                PartitionedFile::new("mock_file2".to_owned(), 20),
+            ],
+            reader,
+            source_schema,
+            limit,
+        );
+
+        file_stream
+            .map(|b| b.expect("No error expected in stream"))
+            .collect::<Vec<_>>()
+            .await
+    }
+
+    #[tokio::test]
+    async fn without_limit() -> Result<()> {
+        let batches = create_and_collect(None).await;
+
+        #[rustfmt::skip]
+        crate::assert_batches_eq!(&[
+            "+---+",
+            "| i |",
+            "+---+",
+            "| 0 |",
+            "| 1 |",
+            "| 2 |",
+            "| 0 |",
+            "| 1 |",
+            "| 0 |",
+            "| 1 |",
+            "| 2 |",
+            "| 0 |",
+            "| 1 |",
+            "+---+",
+        ], &batches);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn with_limit_between_files() -> Result<()> {
+        let batches = create_and_collect(Some(5)).await;
+        #[rustfmt::skip]
+        crate::assert_batches_eq!(&[
+            "+---+",
+            "| i |",
+            "+---+",
+            "| 0 |",
+            "| 1 |",
+            "| 2 |",
+            "| 0 |",
+            "| 1 |",
+            "+---+",
+        ], &batches);
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn with_limit_at_middle_of_batch() -> Result<()> {
+        let batches = create_and_collect(Some(6)).await;
+        #[rustfmt::skip]
+        crate::assert_batches_eq!(&[
+            "+---+",
+            "| i |",
+            "+---+",
+            "| 0 |",
+            "| 1 |",
+            "| 2 |",
+            "| 0 |",
+            "| 1 |",
+            "| 0 |",
+            "+---+",
+        ], &batches);
+
+        Ok(())
+    }
+}

@@ -293,5 +293,6 @@ pub fn make_timestamps() -> RecordBatch {
 }
 
 pub mod exec;
+pub mod object_store;
 pub mod user_defined;
 pub mod variable;
