@@ -19,6 +19,7 @@
 
 mod avro;
 mod csv;
+mod file_stream;
 mod json;
 mod parquet;
 
@@ -26,3 +27,27 @@ pub use self::parquet::ParquetExec;
 pub use avro::AvroExec;
 pub use csv::CsvExec;
 pub use json::NdJsonExec;
+
+use super::RecordBatchStream;
+use crate::datasource::PartitionedFile;
+use std::fmt::{Display, Formatter, Result};
+
+/// A wrapper to customize partitioned file display
+#[derive(Debug)]
+struct FileGroupsDisplay<'a>(&'a [Vec<PartitionedFile>]);
+
+impl<'a> Display for FileGroupsDisplay<'a> {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        let parts: Vec<_> = self
+            .0
+            .iter()
+            .map(|pp| {
+                pp.iter()
+                    .map(|pf| pf.file_meta.path())
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            })
+            .collect();
+        write!(f, "[{}]", parts.join(", "))
+    }
+}

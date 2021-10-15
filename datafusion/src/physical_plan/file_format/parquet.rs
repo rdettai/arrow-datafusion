@@ -23,6 +23,7 @@ use std::{any::Any, convert::TryInto};
 
 use crate::datasource::file_format::parquet::ChunkObjectReader;
 use crate::datasource::object_store::ObjectStore;
+use crate::datasource::PartitionedFile;
 use crate::{
     error::{DataFusionError, Result},
     logical_plan::{Column, Expr},
@@ -58,8 +59,6 @@ use tokio::{
 };
 
 use async_trait::async_trait;
-
-use crate::datasource::PartitionedFile;
 
 /// Execution plan for scanning one or more Parquet partitions
 #[derive(Debug, Clone)]
@@ -296,23 +295,12 @@ impl ExecutionPlan for ParquetExec {
     ) -> std::fmt::Result {
         match t {
             DisplayFormatType::Default => {
-                let files: Vec<_> = self
-                    .file_groups
-                    .iter()
-                    .map(|pp| {
-                        pp.iter()
-                            .map(|f| f.to_string())
-                            .collect::<Vec<_>>()
-                            .join(", ")
-                    })
-                    .collect();
-
                 write!(
                     f,
-                    "ParquetExec: batch_size={}, limit={:?}, partitions=[{}]",
+                    "ParquetExec: batch_size={}, limit={:?}, partitions={}",
                     self.batch_size,
                     self.limit,
-                    files.join(", ")
+                    super::FileGroupsDisplay(&self.file_groups)
                 )
             }
         }
