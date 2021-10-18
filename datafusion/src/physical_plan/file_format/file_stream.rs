@@ -17,6 +17,9 @@
 
 //! A generic stream over file format readers that can be used by
 //! any file format that read its files from start to end.
+//!
+//! Note: Most traits here need to be marked `Sync + Send` to be
+//! compliant with the `SendableRecordBatchStream` trait.
 
 use crate::{
     datasource::{object_store::ObjectStore, PartitionedFile},
@@ -45,9 +48,8 @@ pub type BatchIter = Box<dyn Iterator<Item = ArrowResult<RecordBatch>> + Send + 
 /// A stream that iterates record batch by record batch, file over file.
 pub struct FileStream<F>
 where
-    F: Fn(Box<dyn Read + Send + Sync>, &Option<usize>) -> BatchIter
+    F: FnMut(Box<dyn Read + Send + Sync>, &Option<usize>) -> BatchIter
         + Send
-        + Sync
         + Unpin
         + 'static,
 {
@@ -68,9 +70,8 @@ where
 
 impl<F> FileStream<F>
 where
-    F: Fn(Box<dyn Read + Send + Sync>, &Option<usize>) -> BatchIter
+    F: FnMut(Box<dyn Read + Send + Sync>, &Option<usize>) -> BatchIter
         + Send
-        + Sync
         + Unpin
         + 'static,
 {
@@ -114,9 +115,8 @@ where
 
 impl<F> Stream for FileStream<F>
 where
-    F: Fn(Box<dyn Read + Send + Sync>, &Option<usize>) -> BatchIter
+    F: FnMut(Box<dyn Read + Send + Sync>, &Option<usize>) -> BatchIter
         + Send
-        + Sync
         + Unpin
         + 'static,
 {
@@ -161,9 +161,8 @@ where
 
 impl<F> RecordBatchStream for FileStream<F>
 where
-    F: Fn(Box<dyn Read + Send + Sync>, &Option<usize>) -> BatchIter
+    F: FnMut(Box<dyn Read + Send + Sync>, &Option<usize>) -> BatchIter
         + Send
-        + Sync
         + Unpin
         + 'static,
 {
@@ -190,7 +189,7 @@ mod tests {
 
         let reader = move |_file, _remain: &Option<usize>| {
             // this reder returns the same batch regardless of the file
-            Box::new(records.clone().into_iter().map(|rec| Ok(rec))) as BatchIter
+            Box::new(records.clone().into_iter().map(Ok)) as BatchIter
         };
 
         let file_stream = FileStream::new(
